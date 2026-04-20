@@ -2,95 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة تحديث البيانات | لوحة القياس</title>
+    <title>أداة تحديث البيانات</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; padding: 50px; background: #f4f7f6; color: #333; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto; text-align: center; }
-        .upload-btn { background: #0056b3; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; margin-top: 20px; font-size: 16px; font-weight: bold; width: 100%; transition: background 0.3s; }
-        .upload-btn:hover { background: #004494; }
-        #status { margin-top: 20px; font-weight: bold; font-size: 14px; padding: 10px; border-radius: 5px;}
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .processing { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
-        input[type="file"] { margin-top: 15px; width: 100%; padding: 10px; border: 1px dashed #ccc; border-radius: 5px; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 50px; background: #f4f7f6; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn { background: #0056b3; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 20px; }
+        #status { margin-top: 20px; padding: 10px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>تحديث بيانات النظام</h2>
-    <p>قم برفع ملف Excel لتحديث بيانات الموقع مباشرة. سيتم استبدال كافة البيانات الحالية.</p>
+    <h2>تحديث بيانات الموقع</h2>
+    <p>ارفع ملف Excel لتحويله إلى بيانات حية</p>
     <input type="file" id="excelFile" accept=".xlsx, .xls">
-    <button class="upload-btn" onclick="uploadData()">رفع وتحديث البيانات</button>
-    <div id="status" style="display: none;"></div>
+    <button class="btn" onclick="uploadData()">تحديث البيانات الآن</button>
+    <div id="status"></div>
 </div>
 
 <script>
-    // 👇 قم بوضع رابط Cloudflare الخاص بك بين علامتي التنصيص أدناه 👇
-    const WORKER_URL = "ضع_الرابط_الخاص_بك_هنا";
+    // ⚠️ استبدل الرابط أدناه برابط الـ Worker الخاص بك من Cloudflare ⚠️
+    const WORKER_URL = "https://tight-wood-16cd.eyad-sulayman.workers.dev";
 
-    function showStatus(message, type) {
-        const statusDiv = document.getElementById('status');
-        statusDiv.style.display = 'block';
-        statusDiv.className = type;
-        statusDiv.innerText = message;
-    }
-
-    function uploadData() {
+    async function uploadData() {
         const fileInput = document.getElementById('excelFile');
+        const status = document.getElementById('status');
+        
+        if (!fileInput.files.length) return alert("اختر ملفاً");
 
-        if (!fileInput.files.length) {
-            showStatus("الرجاء اختيار ملف Excel أولاً.", "error");
-            return;
-        }
-
-        const file = fileInput.files[0];
         const reader = new FileReader();
-
-        showStatus("جاري معالجة الملف وتحويله...", "processing");
+        status.innerText = "جاري التحويل والرفع...";
+        status.style.background = "#cce5ff";
 
         reader.onload = async function(e) {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                
-                // قراءة أول ورقة عمل (Sheet)
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // تحويل البيانات إلى JSON
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-                if (jsonData.length === 0) {
-                    showStatus("ملف الإكسل فارغ أو لا يحتوي على بيانات صحيحة.", "error");
-                    return;
-                }
-
-                showStatus("جاري رفع البيانات إلى الخادم (Cloudflare)...", "processing");
-
-                // إرسال البيانات
-                const response = await fetch(WORKER_URL, {
+                const res = await fetch(WORKER_URL, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(jsonData)
                 });
 
-                if(response.ok) {
-                    showStatus("تم تحديث البيانات بنجاح! يمكنك الآن فتح لوحة القياس.", "success");
-                    fileInput.value = ""; // تفريغ الحقل
+                if (res.ok) {
+                    status.innerText = "تم التحديث بنجاح! اذهب لمشاهدة الموقع.";
+                    status.style.background = "#d4edda";
                 } else {
                     throw new Error("فشل الرفع للخادم");
                 }
-            } catch (error) {
-                showStatus("حدث خطأ أثناء الرفع: " + error.message, "error");
-                console.error(error);
+            } catch (err) {
+                status.innerText = "خطأ: " + err.message;
+                status.style.background = "#f8d7da";
             }
         };
-
-        reader.readAsArrayBuffer(file);
+        reader.readAsArrayBuffer(fileInput.files[0]);
     }
 </script>
-
 </body>
 </html>
