@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة المؤشرات التفاعلية</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>لوحة البيانات المباشرة 📊</h1>
+            <p>يتم تحديث هذه البيانات لحظياً بمجرد رفع ملف Excel عبر لوحة التحكم</p>
+        </div>
+
+        <div class="card">
+            <canvas id="myChart" height="100"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>جدول البيانات المفصل</h3>
+            <div style="overflow-x:auto;">
+                <table id="dataTable">
+                    <thead>
+                        <tr id="tableHeaders"></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
