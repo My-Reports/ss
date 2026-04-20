@@ -2,38 +2,41 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>أداة تحديث البيانات</title>
+    <title>أداة تحديث البيانات | إياد سليمان</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 50px; background: #f4f7f6; text-align: center; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn { background: #0056b3; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 20px; }
-        #status { margin-top: 20px; padding: 10px; border-radius: 5px; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 50px; background: #f0f2f5; text-align: center; }
+        .container { background: white; padding: 40px; border-radius: 15px; max-width: 500px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .btn { background: #1a73e8; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { background: #1557b0; }
+        #status { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>تحديث بيانات الموقع</h2>
-    <p>ارفع ملف Excel لتحويله إلى بيانات حية</p>
-    <input type="file" id="excelFile" accept=".xlsx, .xls">
-    <button class="btn" onclick="uploadData()">تحديث البيانات الآن</button>
+    <h2 style="color: #1a73e8;">تحديث بيانات النظام</h2>
+    <p>ارفع ملف Excel (Iraqi Market Analysis)</p>
+    <input type="file" id="excelFile" accept=".xlsx, .xls" style="margin-top: 10px;">
+    <button class="btn" onclick="uploadData()">تحديث الموقع الآن 🚀</button>
     <div id="status"></div>
 </div>
 
 <script>
-    // ⚠️ استبدل الرابط أدناه برابط الـ Worker الخاص بك من Cloudflare ⚠️
-    const WORKER_URL = "https://tight-wood-16cd.eyad-sulayman.workers.dev";
+    // الرابط المعتمد بناءً على اسم الـ Worker الجديد الخاص بك
+    const WORKER_URL = "https://excel-api.eyad-sulayman.workers.dev";
 
     async function uploadData() {
         const fileInput = document.getElementById('excelFile');
         const status = document.getElementById('status');
         
-        if (!fileInput.files.length) return alert("اختر ملفاً");
+        if (!fileInput.files.length) return alert("الرجاء اختيار ملف أولاً");
 
         const reader = new FileReader();
-        status.innerText = "جاري التحويل والرفع...";
-        status.style.background = "#cce5ff";
+        status.style.display = "block";
+        status.innerText = "جاري تحويل البيانات ورفعها للسحاب...";
+        status.style.background = "#e8f0fe";
+        status.style.color = "#1967d2";
 
         reader.onload = async function(e) {
             try {
@@ -48,14 +51,16 @@
                 });
 
                 if (res.ok) {
-                    status.innerText = "تم التحديث بنجاح! اذهب لمشاهدة الموقع.";
-                    status.style.background = "#d4edda";
+                    status.innerText = "✅ تم تحديث البيانات بنجاح! الموقع يعرض الآن أحدث البيانات.";
+                    status.style.background = "#e6fffa";
+                    status.style.color = "#00695c";
                 } else {
-                    throw new Error("فشل الرفع للخادم");
+                    throw new Error("فشل الرفع. تأكد من ربط KV بشكل صحيح.");
                 }
             } catch (err) {
-                status.innerText = "خطأ: " + err.message;
-                status.style.background = "#f8d7da";
+                status.innerText = "❌ خطأ: " + err.message;
+                status.style.background = "#fff5f5";
+                status.style.color = "#c53030";
             }
         };
         reader.readAsArrayBuffer(fileInput.files[0]);

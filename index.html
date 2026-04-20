@@ -3,41 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة القياس | البيانات الحية</title>
+    <title>لوحة القياس الحية | Live Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background-color: #f8f9fc; margin: 0; padding: 20px; color: #5a5c69; }
-        .dashboard-container { max-width: 1200px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #e3e6f0; padding-bottom: 15px; }
-        .header h1 { color: #4e73df; margin: 0; font-size: 24px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); border: 1px solid #e3e6f0; border-right: 4px solid #4e73df; margin-bottom: 20px; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: right; }
-        th, td { padding: 12px; border-bottom: 1px solid #e3e6f0; }
-        th { background-color: #f8f9fc; color: #858796; }
-        #loading { text-align: center; font-size: 18px; color: #858796; padding: 50px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8f9fc; margin: 0; padding: 20px; color: #333; }
+        .dashboard-container { max-width: 1100px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #edf2f7; text-align: right; }
+        th { background-color: #f7fafc; color: #4a5568; }
+        #loading { text-align: center; font-size: 20px; color: #718096; padding: 100px; }
     </style>
 </head>
 <body>
 
 <div class="dashboard-container">
     <div class="header">
-        <h1>اللوحة التحليلية - إياد سليمان</h1>
-        <div id="status">جاري جلب البيانات...</div>
+        <h1 style="color: #2b6cb0; margin: 0;">نظام تحليل البيانات</h1>
+        <div id="dataStatus" style="color: #48bb78; font-weight: bold;">متصل بالخادم</div>
     </div>
 
-    <div id="loading">الرجاء التأكد من وضع الرابط الصحيح في الكود...</div>
+    <div id="loading">جاري مزامنة البيانات من Cloudflare...</div>
 
-    <div id="dashboardContent" style="display: none;">
+    <div id="mainContent" style="display: none;">
         <div class="card">
-            <h2>نظرة عامة على البيانات</h2>
-            <canvas id="myChart" height="100"></canvas>
+            <h2 style="color: #2d3748; border-bottom: 2px solid #ebf4ff; padding-bottom: 10px;">التمثيل البياني</h2>
+            <canvas id="myChart" height="120"></canvas>
         </div>
+
         <div class="card">
-            <h2>تفاصيل الجدول</h2>
-            <div class="table-responsive">
+            <h2 style="color: #2d3748;">جدول البيانات التفصيلي</h2>
+            <div style="overflow-x: auto;">
                 <table id="dataTable">
-                    <thead><tr id="tableHeaders"></tr></thead>
+                    <thead><tr id="headerRow"></tr></thead>
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
@@ -46,41 +45,31 @@
 </div>
 
 <script>
-    // ⚠️ استبدل الرابط أدناه برابط الـ Worker الخاص بك من Cloudflare ⚠️
-    const WORKER_URL = "https://tight-wood-16cd.eyad-sulayman.workers.dev"; 
+    const WORKER_URL = "https://excel-api.eyad-sulayman.workers.dev";
 
-    async function loadLiveDashboard() {
+    async function loadData() {
         try {
             const response = await fetch(WORKER_URL);
-            
-            // فحص إذا كان الرد ليس JSON (مثل صفحة 404)
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new TypeError("الرابط المستخدم غير صحيح أو لا يرسل بيانات JSON!");
-            }
-
             const data = await response.json();
-            document.getElementById('loading').style.display = 'none';
 
             if (!data || data.length === 0) {
-                document.getElementById('loading').innerText = "لا توجد بيانات حالياً. ارفع ملف Excel أولاً عبر صفحة admin.html";
-                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerText = "لا توجد بيانات متاحة. يرجى الرفع من صفحة admin.html";
                 return;
             }
 
-            document.getElementById('dashboardContent').style.display = 'block';
-            document.getElementById('status').innerText = "تم تحديث البيانات بنجاح";
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
 
-            // بناء الجدول
+            // بناء الجدول ديناميكياً
             const headers = Object.keys(data[0]);
-            const headerRow = document.getElementById('tableHeaders');
+            const headerRow = document.getElementById('headerRow');
             headers.forEach(h => headerRow.innerHTML += `<th>${h}</th>`);
             
-            const tableBody = document.getElementById('tableBody');
+            const tbody = document.getElementById('tableBody');
             data.forEach(row => {
                 let tr = "<tr>";
                 headers.forEach(h => tr += `<td>${row[h] || '-'}</td>`);
-                tableBody.innerHTML += tr + "</tr>";
+                tbody.innerHTML += tr + "</tr>";
             });
 
             // الرسم البياني
@@ -89,15 +78,22 @@
                 type: 'bar',
                 data: {
                     labels: data.map(r => r[headers[0]]),
-                    datasets: [{ label: headers[1], data: data.map(r => r[headers[1]]), backgroundColor: '#4e73df' }]
-                }
+                    datasets: [{
+                        label: headers[1] || 'القيم',
+                        data: data.map(r => r[headers[1]]),
+                        backgroundColor: '#4299e1',
+                        borderRadius: 5
+                    }]
+                },
+                options: { responsive: true }
             });
 
-        } catch (error) {
-            document.getElementById('loading').innerText = "خطأ: " + error.message;
+        } catch (err) {
+            document.getElementById('loading').innerText = "حدث خطأ في الاتصال بالخادم: " + err.message;
         }
     }
-    window.onload = loadLiveDashboard;
+
+    window.onload = loadData;
 </script>
 </body>
 </html>
