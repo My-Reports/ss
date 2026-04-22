@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salutem Roadmap ERP</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --input-bg: rgba(15, 23, 42, 0.8);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #06b6d4; 
+            --accent-hover: #0891b2;
+            --excel-green: #10b981;
+            --status-completed: #10b981; 
+            --status-progress: #3b82f6; 
+            --status-delayed: #ef4444;   
+            --status-notstarted: #64748b;
+            --sidebar-bg: #0f172a;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-gradient); color: var(--text-main); margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
+
+        /* ================= شاشة تسجيل الدخول ================= */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), 
+                        url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop') center/cover;
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+            padding: 20px;
+        }
+        .login-card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(20px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .login-card h1 { font-size: 2.2rem; margin-bottom: 10px; color: var(--accent-blue); }
+        .login-card img { max-width: 150px; margin-bottom: 15px; border-radius: 8px; }
+        .login-btn { width: 100%; padding: 15px; border-radius: 8px; border: none; font-size: 1.2rem; font-weight: bold; background: linear-gradient(90deg, #06b6d4, #3b82f6); color: white; cursor: pointer; transition: 0.3s; margin-top: 15px;}
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4); }
+
+        /* ================= القائمة الجانبية ================= */
+        #appScreen { display: none; height: 100vh; height: 100dvh; width: 100vw; flex-direction: column;}
+        
+        .sidebar { position: fixed; top: 0; bottom: 0; width: 280px; background-color: var(--sidebar-bg); display: flex; flex-direction: column; z-index: 2000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 25px rgba(0,0,0,0.5); }
+        html[dir="rtl"] .sidebar { right: -300px; border-left: 1px solid rgba(255,255,255,0.05); }
+        html[dir="rtl"] .sidebar.open { right: 0; }
+        html[dir="ltr"] .sidebar { left: -300px; border-right: 1px solid rgba(255,255,255,0.05); }
+        html[dir="ltr"] .sidebar.open { left: 0; }
+
+        .close-sidebar { position: absolute; top: 15px; background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; z-index: 10;}
+        html[dir="rtl"] .close-sidebar { left: 15px; } html[dir="ltr"] .close-sidebar { right: 15px; }
+        .close-sidebar:hover { color: white; transform: scale(1.1); }
+
+        .sidebar-header { padding: 30px 20px 20px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header h2 { color: var(--accent-blue); margin:0; text-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 1.6rem;}
+        
+        .nav-links { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 20px; overflow-y: auto; }
+        .nav-links::-webkit-scrollbar { width: 4px; }
+        .nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        
+        .nav-btn { background: transparent; border: none; color: var(--text-muted); text-align: right; padding: 15px; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        html[dir="ltr"] .nav-btn { text-align: left; }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        .nav-btn.active { background: linear-gradient(90deg, rgba(6, 182, 212, 0.2), transparent); color: var(--accent-blue); border-right: 3px solid var(--accent-blue); border-radius: 4px; }
+        html[dir="ltr"] .nav-btn.active { border-right: none; border-left: 3px solid var(--accent-blue); }
+        
+        .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); background-color: var(--sidebar-bg); }
+        .logout-btn { background: #1e293b; color: var(--status-delayed); width: 100%; text-align: center; margin: 0;}
+        html[dir="ltr"] .logout-btn { text-align: center; }
+        .logout-btn:hover { background: #ef4444; color: white; transform: none;}
+
+        .sidebar-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index: 1500; }
+        .sidebar-overlay.open { display: block; }
+
+        /* ================= المحتوى ================= */
+        .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; width: 100%; -webkit-overflow-scrolling: touch;}
+        .topbar { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; position: sticky; top: 0; z-index: 100;}
+        .menu-toggle { background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; transition: 0.2s; padding: 0;}
+        .menu-toggle:hover { color: var(--accent-blue); transform: scale(1.1);}
+        .topbar-left { display: flex; align-items: center; gap: 15px; }
+        .topbar h3 { font-size: 1.1rem; }
+        .lang-toggle { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.85rem;}
+        .lang-toggle:hover { background: #475569; }
+        
+        .container { width: 100%; max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 0 20px 20px 20px;}
+        .card { background-color: var(--card-bg); backdrop-filter: blur(15px); padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Forms */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; letter-spacing: 0.5px;}
+        input, select { background-color: var(--input-bg); border: 1px solid #334155; color: var(--text-main); padding: 12px; border-radius: 8px; font-size: 0.95rem; width: 100%; transition: 0.3s;}
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 8px rgba(6, 182, 212, 0.2); }
+        select option[disabled] { color: var(--text-muted); }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; grid-column: 1 / -1; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.95rem; color: white; display: flex; justify-content: center; align-items: center; gap: 5px;}
+        .btn-add { background: linear-gradient(90deg, #06b6d4, #3b82f6); flex: 1; font-size: 1.1rem; padding: 15px;}
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3); }
+        .btn-add-sm { background: linear-gradient(90deg, #06b6d4, #3b82f6); flex: 0.3; }
+        .btn-clear { background-color: #475569; }
+        .btn-clear:hover { background-color: #64748b; }
+        .btn-excel { background-color: var(--excel-green); }
+        .btn-excel:hover { background-color: #059669; }
+        
+        /* Tables */
+        .table-responsive { overflow-x: auto; border-radius: 8px; -webkit-overflow-scrolling: touch;}
+        table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: start; font-size: 0.9rem; min-width: 800px;}
+        th, td { padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: var(--accent-blue); vertical-align: bottom; background-color: rgba(15, 23, 42, 0.5); font-weight: bold;}
+        tr:hover td { background-color: rgba(255,255,255,0.02); }
+        .nowrap-col { white-space: nowrap; }
+        .filter-input { width: 90%; padding: 8px; margin-top: 8px; font-size: 0.8rem; background-color: rgba(0,0,0,0.2); border: 1px solid #334155; color: white; border-radius: 6px; }
+        
+        /* Badges & Actions */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; white-space: nowrap; border: 1px solid transparent;}
+        .bg-completed { background-color: rgba(16, 185, 129, 0.15); color: var(--status-completed); border-color: rgba(16, 185, 129, 0.3); }
+        .bg-progress { background-color: rgba(59, 130, 246, 0.15); color: var(--status-progress); border-color: rgba(59, 130, 246, 0.3); }
+        .bg-delayed { background-color: rgba(239, 68, 68, 0.15); color: var(--status-delayed); border-color: rgba(239, 68, 68, 0.3); animation: pulseAlert 2s infinite; }
+        .bg-notstarted { background-color: rgba(100, 116, 139, 0.15); color: var(--status-notstarted); border-color: rgba(100, 116, 139, 0.3); }
+        
+        .action-btn { padding: 8px 12px; font-size: 0.85rem; margin: 2px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s;}
+        .action-btn:hover { transform: translateY(-1px); }
+        .btn-track { background-color: rgba(6, 182, 212, 0.2); color: var(--accent-blue); border: 1px solid rgba(6, 182, 212, 0.4);}
+        .btn-track:hover { background-color: var(--accent-blue); color: #000; }
+        .btn-edit { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);}
+        .btn-edit:hover { background-color: #3b82f6; color: white;}
+        .btn-delete { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);}
+        .btn-delete:hover { background-color: #ef4444; color: white;}
+
+        /* Visual Tracker */
+        #visualTrackerCard { display: none; margin-bottom: 20px; transition: all 0.5s ease; }
+        .tracker-header { font-size: 1.3rem; color: var(--accent-blue); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 10px;}
+        .stepper { display: flex; justify-content: space-between; position: relative; width: 100%; margin-top: 20px; padding: 0 4%;}
+        .progress-line { position: absolute; top: 20px; height: 4px; background-color: var(--status-completed); z-index: 2; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 12px var(--status-completed); }
+        .step { position: relative; z-index: 3; text-align: center; flex: 1; transition: 0.3s; }
+        .step-icon { width: 42px; height: 42px; border-radius: 50%; background-color: var(--sidebar-bg); border: 3px solid #334155; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px auto; font-weight: bold; transition: all 0.4s ease; color: var(--text-muted); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);}
+        .step-label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; margin-top: 8px; transition: 0.3s;}
+        
+        .step.completed .step-icon { background: linear-gradient(145deg, #10b981, #059669); border-color: #059669; color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .step.completed .step-label { color: var(--status-completed); }
+        .step.active .step-icon { background: linear-gradient(135deg, #3b82f6, #06b6d4); border: 2px solid #fff; color: white; box-shadow: 0 0 20px rgba(6, 182, 212, 0.8), 0 0 40px rgba(59, 130, 246, 0.4); animation: activePulse 1.5s infinite alternate; transform: scale(1.2); z-index: 10;}
+        .step.active .step-label { color: var(--accent-blue); font-size: 0.85rem; text-shadow: 0 0 8px rgba(6, 182, 212, 0.5);}
+        
+        @keyframes activePulse {
+            0% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.6); }
+            100% { box-shadow: 0 0 25px rgba(6, 182, 212, 1), 0 0 15px rgba(255,255,255,0.6); transform: scale(1.25); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-content { width: 95%; max-width: 650px; max-height: 90vh; overflow-y: auto; background: rgba(30, 41, 59, 0.95); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px rgba(0,0,0,0.6);}
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+
+        /* Dashboard 3D Effects */
+        .dash-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;}
+        .stat-card { 
+            background: var(--card-bg); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center; 
+            border: 1px solid rgba(255,255,255,0.05); border-bottom: 4px solid var(--accent-blue); transition: 0.3s; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.15), inset 0 -4px 6px rgba(0,0,0,0.4);
+        }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 20px 45px rgba(0,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.2), inset 0 -4px 6px rgba(0,0,0,0.4);}
+        .stat-card h4 { margin: 0; color: var(--text-muted); font-size: 0.9rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
+        .stat-card h2 { margin: 10px 0 0 0; font-size: 2.2rem; color: white; text-shadow: 0 5px 15px rgba(0,0,0,0.7);}
+        
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100%, 1fr)); gap: 20px; }
+        .chart-card { box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1); padding: 20px;}
+        .chart-container { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; margin-top: 10px;}
+        .chart-container canvas { filter: drop-shadow(5px 15px 12px rgba(0,0,0,0.8)) drop-shadow(-2px -2px 4px rgba(255,255,255,0.1)); }
+
+        /* ------------------ Timeline Slicer & Visuals ------------------ */
+        .timeline-slicer-container { margin-bottom: 30px; text-align: center; padding: 0 10px;}
+        .timeline-slicer { background: var(--input-bg); border: 1px solid var(--accent-blue); color: white; padding: 12px 20px; border-radius: 8px; width: 100%; max-width: 500px; font-size: 1.05rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3); outline: none; transition: border-color 0.3s; }
+        .timeline-slicer:focus { border-color: #3b82f6; }
+        
+        .timeline-scroll-area { overflow-x: auto; padding-bottom: 20px; min-height: 400px; display: flex; flex-direction: column; }
+        .timeline-wrapper { display: flex; position: relative; min-width: 100%; padding-top: 30px; align-items: flex-start; flex: 1; }
+        .timeline-track { position: absolute; top: 43px; left: 0; width: 100%; height: 4px; background: rgba(6, 182, 212, 0.3); z-index: 1; }
+        .timeline-node { display: flex; flex-direction: column; align-items: center; width: 220px; flex-shrink: 0; z-index: 2; position: relative; }
+        .timeline-point { width: 30px; height: 30px; border-radius: 50%; background: var(--card-bg); border: 5px solid var(--accent-blue); box-shadow: 0 0 15px rgba(6, 182, 212, 0.6); z-index: 3; transition: 0.3s; }
+        .timeline-node:hover .timeline-point { transform: scale(1.2); border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+        .timeline-date { margin-top: 15px; font-weight: bold; color: #fff; background: linear-gradient(135deg, var(--accent-blue), #3b82f6); padding: 5px 15px; border-radius: 20px; box-shadow: 0 5px 10px rgba(0,0,0,0.4); text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 0.95rem; letter-spacing: 1px; }
+        .timeline-items { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; width: 90%; }
+        .timeline-item { background: rgba(15, 23, 42, 0.7); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); padding: 12px; text-align: center; font-size: 0.85rem; font-weight: bold; color: var(--text-main); line-height: 1.4; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transition: 0.2s; border-right: 3px solid var(--accent-blue); word-break: break-word; }
+        html[dir="ltr"] .timeline-item { border-right: none; border-left: 3px solid var(--accent-blue); }
+        .timeline-item:hover { background: rgba(30, 41, 59, 0.9); border-color: rgba(6, 182, 212, 0.5); transform: translateY(-2px); }
+
+        /* Config Layout - Grouping */
+        .config-page-layout { display: grid; grid-template-columns: 1fr; gap: 30px; align-items: start; }
+        .config-column { display: flex; flex-direction: column; gap: 15px; }
+        .config-card { background-color: var(--card-bg); backdrop-filter: blur(15px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .config-summary { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; height: 65px; box-sizing: border-box; background: rgba(0,0,0,0.1); transition: 0.3s; }
+        .config-summary:hover { background: rgba(0,0,0,0.3); }
+        .config-summary h3 { margin: 0; font-size: 1.1rem; color: var(--accent-blue); }
+        .caret { transition: transform 0.3s ease; font-size: 0.85rem; color: var(--text-muted); }
+        .caret.open { transform: rotate(180deg); color: var(--accent-blue); }
+        
+        .config-content { display: none; padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .config-content.open { display: flex; flex-direction: column; animation: fadeInDown 0.3s ease; }
+        
+        .config-list { list-style: none; padding: 0; margin-top: 15px; }
+        .config-list li { background: rgba(0,0,0,0.2); padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; transition: 0.2s; flex-wrap: wrap; gap: 10px;}
+        .config-list li:hover { border-color: rgba(6, 182, 212, 0.4); background: rgba(0,0,0,0.4);}
+        .sort-btns { display: flex; gap: 5px; }
+        .sort-btn { background: #334155; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;}
+        .sort-btn:hover { background: var(--accent-blue); }
+        
+        .view-section { display: none; animation: fadeIn 0.4s ease;}
+        .view-section.active { display: flex; flex-direction: column; }
+
+        /* Dynamic Hiding Classes */
+        body.hide-products #fg_products, body.hide-products .col_products, body.hide-products #card_products { display: none !important; }
+        body.hide-skus #fg_skus, body.hide-skus .col_skus, body.hide-skus #card_skus { display: none !important; }
+        body.hide-skus2 #fg_skus2, body.hide-skus2 .col_skus2, body.hide-skus2 #card_skus2 { display: none !important; }
+        body.hide-suppliers #fg_suppliers, body.hide-suppliers .col_suppliers, body.hide-suppliers #card_suppliers { display: none !important; }
+        body.hide-status #fg_status, body.hide-status .col_status, body.hide-status #card_status { display: none !important; }
+        body.hide-milestones #fg_milestones, body.hide-milestones .col_milestones, body.hide-milestones #card_milestones { display: none !important; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        /* Media Queries للموبايل والتابلت واللابتوب */
+        @media (min-width: 768px) {
+            .config-page-layout { grid-template-columns: 1fr 1fr; }
+            .charts-grid { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
+            .modal-content { padding: 30px; }
+            .dash-summary { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+            .stat-card h2 { font-size: 2.8rem; }
+        }
+        @media (max-width: 600px) {
+            .topbar h3 { font-size: 1rem; }
+            #welcomeUserText { display: none; }
+            .tracker-header { flex-direction: column; align-items: flex-start;}
+        }
+    </style>
+</head>
+<body>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: var(--accent-blue); border-bottom:1px solid #334155; padding-bottom:15px; margin-top:0;">تأكيد إضافة الخطة (Confirm Forecast)</h3>
+            <p style="color: var(--text-main); font-size: 0.95rem;">هل أنت متأكد من حفظ هذه البيانات ضمن الخطة الزمنية للمنتج؟</p>
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155;">
+                <p style="margin: 5px 0;"><strong>Product:</strong> <span id="confIdText" style="color: var(--accent-blue); font-weight: bold;"></span></p>
+                <p style="margin: 5px 0;"><strong>المرحلة (Milestone):</strong> <span id="confMileText" style="color: #60a5fa;"></span></p>
+                <p style="margin: 5px 0;"><strong>الجدول الزمني:</strong> <span id="confDatesText" style="color: #10b981;"></span></p>
+            </div>
+            
+            <div class="stepper" id="confirmStepperContainer" style="margin-bottom: 35px; overflow-x: auto;"></div>
+            
+            <div class="btn-group">
+                <button class="btn-add" onclick="confirmSaveForecast()">✅ نعم، حفظ البيانات (Yes, Save)</button>
+                <button class="btn-clear" onclick="closeConfirmModal()">❌ لا، تراجع للتعديل (No, Cancel)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 data-i18n="edit_title" style="color: var(--accent-blue); margin-top:0; border-bottom:1px solid #334155; padding-bottom:15px;">تحديث تواريخ الإنجاز (Update Dates)</h3>
+            <div class="form-grid" style="margin-top: 20px;">
+                <div class="form-group" style="grid-column: 1 / -1; display:flex; flex-direction:row; gap:10px;">
+                    <input type="text" id="editItemName" readonly style="background-color: rgba(0,0,0,0.5); color: var(--accent-blue); font-weight:bold; flex:1.5; cursor: not-allowed; border: 1px solid #334155;">
+                    <input type="text" id="editMilestone" readonly style="background-color: rgba(0,0,0,0.5); color: #94a3b8; flex:1; cursor: not-allowed; border: 1px solid #334155;">
+                </div>
+                
+                <div class="form-group" style="padding: 15px; border: 1px dashed #334155; border-radius: 8px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--text-main); font-size:0.9rem;">بيانات الخطة (Forecast) - <span style="color:#ef4444; font-size:0.8rem;">للقراءة فقط 🔒</span></h4>
+                    <label>تاريخ البدء المخطط (Plan Start)</label>
+                    <input type="date" id="editPlanStart" readonly style="margin-bottom: 10px; background-color: rgba(0,0,0,0.5); color: #94a3b8; cursor: not-allowed; border-color: #334155;">
+                    <label>تاريخ الانتهاء المخطط (Plan End)</label>
+                    <input type="date" id="editPlanEnd" readonly style="background-color: rgba(0,0,0,0.5); color: #94a3b8; cursor: not-allowed; border-color: #334155;">
+                </div>
+                
+                <div class="form-group" style="padding: 15px; border: 1px dashed #3b82f6; border-radius: 8px; background: rgba(59, 130, 246, 0.05);">
+                    <h4 style="margin:0 0 10px 0; color:#60a5fa; font-size:0.9rem;">البيانات الفعلية (Actuals) والتحديث</h4>
+                    
+                    <label style="color: var(--accent-blue);">حالة التنفيذ (Status Override)</label>
+                    <select id="editExecutionStatus" style="margin-bottom: 10px; border-color: rgba(59, 130, 246, 0.5); font-weight:bold; background-color: rgba(15, 23, 42, 0.9);">
+                        <option value="Auto">🤖 احتساب تلقائي ذكي (Auto)</option>
+                        <option value="Completed">✅ مكتمل (Completed)</option>
+                        <option value="In Progress">🔄 قيد التنفيذ (In Progress)</option>
+                        <option value="Delayed">🚨 متأخر (Delayed)</option>
+                        <option value="Not Started">⏳ لم يبدأ (Not Started)</option>
+                    </select>
+
+                    <label>تاريخ البدء الفعلي (Actual Start)</label>
+                    <input type="date" id="editActualStart" style="margin-bottom: 10px; border-color: rgba(59, 130, 246, 0.5);">
+                    <label>تاريخ الانتهاء الفعلي (Actual End)</label>
+                    <input type="date" id="editActualEnd" style="border-color: rgba(59, 130, 246, 0.5);">
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                * الوضع التلقائي يقوم بمقارنة تاريخ اليوم مع التواريخ المخططة لإعطاء حالة (متأخر) بدقة في حال تجاوز المدة.
+            </div>
+            
+            <input type="hidden" id="editIndex">
+            <div class="btn-group" style="margin-top: 25px;">
+                <button class="btn-add" onclick="saveUpdate()" data-i18n="btn_save">💾 حفظ التحديث (Save)</button>
+                <button class="btn-clear" onclick="closeUpdateModal()" data-i18n="btn_cancel">إلغاء (Cancel)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginScreen">
+        <div class="login-card">
+            <img src="salutem.png" alt="Salutem Logo" onerror="this.style.display='none'">
+            <h1>Salutem Roadmap</h1>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">نظام إدارة وتتبع معالم الأصناف الدوائية</p>
+            <button class="login-btn" onclick="attemptLogin()">Continue (متابعة)</button>
+        </div>
+    </div>
+
+    <div id="appScreen">
+        
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        
+        <aside class="sidebar" id="sidebar">
+            <button class="close-sidebar" onclick="toggleSidebar()">✖</button>
+            <div class="sidebar-header">
+                <h2>Salutem Roadmap</h2>
+                <span style="color: #64748b; font-size: 0.8rem; letter-spacing: 1px;">Pharma Tracker</span>
+            </div>
+            
+            <nav class="nav-links">
+                <button class="nav-btn active" onclick="switchTab('maindash')" id="nav-maindash" data-i18n="tab_maindash">🏠 اللوحة الرئيسية</button>
+                <button class="nav-btn" onclick="switchTab('tracker')" id="nav-tracker" data-i18n="tab_tracker">📝 الخطة الأساسية (Forecast)</button>
+                <button class="nav-btn" onclick="switchTab('followup')" id="nav-followup" data-i18n="tab_followup">🔄 المتابعة الفعلية (Actuals)</button>
+                <button class="nav-btn" onclick="switchTab('reports')" id="nav-reports" data-i18n="tab_reports">📊 لوحات القياس (Dashboards)</button>
+                <button class="nav-btn" onclick="switchTab('config')" id="nav-config" data-i18n="tab_config">⚙️ الإعدادات (Config)</button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="nav-btn logout-btn" onclick="logout()" data-i18n="btn_logout">🚪 العودة للبداية</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h3 id="pageTitle" style="color: var(--text-main); margin: 0; font-weight: 600;">اللوحة الرئيسية</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span id="welcomeUserText" style="font-weight: bold; color: var(--accent-blue);">مرحباً بك</span>
+                    <button class="lang-toggle" onclick="toggleLanguage()" id="langBtn">English</button>
+                </div>
+            </header>
+
+            <div id="view-maindash" class="container view-section active">
+                <div class="card chart-card" style="margin-top: 10px; overflow: hidden; min-height: 70vh; display: flex; flex-direction: column;">
+                    <h3 data-i18n="timeline_title" style="text-align: center; margin-bottom: 25px; font-size: 1.3rem; color: var(--accent-blue); text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);">الجدول الزمني للأصناف حسب المرحلة (Quarterly)</h3>
+                    <div class="timeline-slicer-container">
+                        <select id="timelineSlicer" class="timeline-slicer" onchange="renderTimeline()">
+                            </select>
+                    </div>
+                    <div class="timeline-scroll-area">
+                        <div id="timelineContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-tracker" class="container view-section">
+                <div class="card">
+                    <form id="trackerForm" class="form-grid">
+                        
+                        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-bottom: -10px;">
+                            <button type="button" onclick="clearFormFields()" style="background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.backgroundColor='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.backgroundColor='rgba(239, 68, 68, 0.15)'">
+                                🧹 مسح وتفريغ الحقول (Clear)
+                            </button>
+                        </div>
+
+                        <div class="form-group" id="fg_skus">
+                            <label data-i18n="lbl_sku">رمز الوحدة (SKU Name)</label>
+                            <select id="skuName" required></select>
+                        </div>
+                        
+                        <div class="form-group" id="fg_products">
+                            <label data-i18n="lbl_product">العلامة التجارية (Brand Name) - <span style="font-weight:normal; color:#64748b">اختياري</span></label>
+                            <select id="productName"></select>
+                        </div>
+                        
+                        <div class="form-group" id="fg_suppliers">
+                            <label data-i18n="lbl_supplier">المورد (Supplier) - <span style="font-weight:normal; color:#64748b">اختياري</span></label>
+                            <select id="supplierName"></select>
+                        </div>
+                        
+                        <div class="form-group" id="fg_milestones">
+                            <label data-i18n="lbl_milestone">المرحلة (Milestone)</label>
+                            <select id="milestone" required></select>
+                        </div>
+                        <div class="form-group" id="fg_status">
+                            <label data-i18n="lbl_status">الحالة الوصفية (Main Status)</label>
+                            <select id="mainStatus" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="lbl_start">تاريخ البدء المخطط</label>
+                            <input type="date" id="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="lbl_end">تاريخ الانتهاء المخطط</label>
+                            <input type="date" id="endDate" required>
+                        </div>
+                        
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label style="color: var(--accent-blue);">product</label>
+                            <input type="text" id="fullIdentifier" readonly style="background-color: rgba(0,0,0,0.5); border-color: rgba(6, 182, 212, 0.4); color: #60a5fa; font-weight: bold; cursor: not-allowed;" placeholder="SKU - Brand">
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label data-i18n="lbl_notes">ملاحظات (Notes)</label>
+                            <input type="text" id="notesInput" placeholder="...">
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button type="submit" class="btn-add" data-i18n="btn_add_forecast">➕ إضافة لخطة التوقع (Add Forecast)</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card" id="visualTrackerCard">
+                    <div class="tracker-header">
+                        <span id="trackerTitle">مسار الدواء: </span>
+                        <button onclick="closeTracker()" class="btn-clear" style="padding: 6px 15px; border-radius:20px; font-size:0.8rem;">✖ إغلاق</button>
+                    </div>
+                    <div class="stepper" id="stepperContainer" style="overflow-x: auto;"></div>
+                </div>
+
+                <div style="text-align: right; margin-bottom: 10px; margin-top: 10px;">
+                    <button class="btn-excel" style="display: inline-block; padding: 10px 20px; width: auto;" onclick="exportForecastExcel()">📊 تصدير خطة التوقع (Export Forecast)</button>
+                </div>
+
+                <div class="card table-responsive">
+                    <table id="dataTableTracker">
+                        <thead>
+                            <tr>
+                                <th class="col_skus"><span data-i18n="th_sku">SKU</span> <input type="text" class="filter-input filter-tracker" onkeyup="applyFilters('dataTableTracker', 'filter-tracker')"></th>
+                                <th class="col_products"><span data-i18n="th_product">العلامة</span> <input type="text" class="filter-input filter-tracker" onkeyup="applyFilters('dataTableTracker', 'filter-tracker')"></th>
+                                <th class="col_suppliers"><span data-i18n="th_supplier">المورد</span> <input type="text" class="filter-input filter-tracker" onkeyup="applyFilters('dataTableTracker', 'filter-tracker')"></th>
+                                <th class="col_milestones"><span data-i18n="th_milestone">المرحلة</span> <input type="text" class="filter-input filter-tracker" onkeyup="applyFilters('dataTableTracker', 'filter-tracker')"></th>
+                                <th class="nowrap-col" data-i18n="th_start">البداية المخططة</th>
+                                <th class="nowrap-col" data-i18n="th_end">النهاية المخططة</th>
+                                <th data-i18n="th_view">متابعة المسار</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyTracker"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-followup" class="container view-section">
+                <div class="card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h3 data-i18n="followup_title" style="color: var(--accent-blue); margin-top:0;">شاشة المتابعة والتحديث الفعلي (Actuals vs Forecast)</h3>
+                            <p data-i18n="followup_desc" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0;">استخدم هذه الشاشة لتحديث التواريخ.</p>
+                        </div>
+                        <button class="btn-excel" onclick="exportToExcel()" data-i18n="btn_export">📊 تصدير إكسيل</button>
+                    </div>
+                </div>
+
+                <div class="card table-responsive">
+                    <table id="dataTableFollowup">
+                        <thead>
+                            <tr>
+                                <th class="col_skus"><span data-i18n="th_sku">SKU</span> <input type="text" class="filter-input filter-fw" onkeyup="applyFilters('dataTableFollowup', 'filter-fw')"></th>
+                                <th class="col_products"><span data-i18n="th_product">العلامة</span> <input type="text" class="filter-input filter-fw" onkeyup="applyFilters('dataTableFollowup', 'filter-fw')"></th>
+                                <th class="col_suppliers"><span data-i18n="th_supplier">المورد</span> <input type="text" class="filter-input filter-fw" onkeyup="applyFilters('dataTableFollowup', 'filter-fw')"></th>
+                                <th class="col_milestones"><span data-i18n="th_milestone">المرحلة</span> <input type="text" class="filter-input filter-fw" onkeyup="applyFilters('dataTableFollowup', 'filter-fw')"></th>
+                                <th class="nowrap-col" data-i18n="th_start">البداية المخططة</th>
+                                <th class="nowrap-col" data-i18n="th_actual_start" style="color:#60a5fa">بدء فعلي</th>
+                                <th class="nowrap-col" data-i18n="th_end">نهاية مخططة</th>
+                                <th class="nowrap-col" data-i18n="th_actual_end" style="color:#60a5fa">نهاية فعلية</th>
+                                <th data-i18n="th_progress">حالة التنفيذ</th>
+                                <th data-i18n="th_action">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyFollowup"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-reports" class="container view-section">
+                <div class="dash-summary">
+                    <div class="stat-card" style="border-bottom-color: #f8fafc">
+                        <h4 data-i18n="dash_brands">إجمالي السجلات الموثقة</h4>
+                        <h2 id="dash-total-brands">0</h2>
+                    </div>
+                    <div class="stat-card" style="border-bottom-color: var(--accent-blue)">
+                        <h4 data-i18n="dash_miles">إجمالي المراحل المخططة</h4>
+                        <h2 id="dash-total-miles">0</h2>
+                    </div>
+                    <div class="stat-card" style="border-bottom-color: var(--status-completed)">
+                        <h4 data-i18n="dash_completed">المراحل المكتملة</h4>
+                        <h2 id="dash-completed">0</h2>
+                    </div>
+                    <div class="stat-card" style="border-bottom-color: var(--status-delayed)">
+                        <h4 data-i18n="dash_delayed">المراحل المتأخرة</h4>
+                        <h2 id="dash-delayed">0</h2>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="card chart-card">
+                        <h3 data-i18n="chart_status_title" style="text-align: center; margin-bottom: 5px; color: var(--accent-blue)">توزيع حالات الإنجاز الأوتوماتيكية</h3>
+                        <div style="text-align:center; height: 25px; margin-bottom:5px;">
+                            <button id="btnBackChartStatus" class="btn-track" style="display:none; padding: 4px 12px; font-size: 0.8rem; border-radius: 20px; cursor: pointer; border:none; background: #334155; color: white;" onclick="resetChartStatus()">🔙 العودة للحالات المجمعة</button>
+                        </div>
+                        <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 data-i18n="chart_brand_title" style="text-align: center; margin-bottom: 20px; color: var(--accent-blue)">نسبة الإنجاز لكل مادة/علامة</h3>
+                        <div class="chart-container"><canvas id="chartBrands"></canvas></div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 data-i18n="chart_delayed_title" style="text-align: center; margin-bottom: 20px; color: var(--status-delayed)">المراحل الأكثر تأخراً (Bottlenecks)</h3>
+                        <div class="chart-container"><canvas id="chartBottleneck"></canvas></div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 data-i18n="chart_supplier_title" style="text-align: center; margin-bottom: 20px; color: #a855f7">توزيع الإنجاز حسب المورد</h3>
+                        <div class="chart-container"><canvas id="chartSupplier"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-config" class="container view-section">
+                <div class="config-page-layout">
+                    <div class="config-column" id="leftConfigColumn">
+                        
+                        <div class="config-card" id="card_skus">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_sku_title">رموز الوحدات SKUs (A-Z)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newSkuInput"><button class="btn-add-sm" onclick="addConfig('skus')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="skusList"></ul>
+                            </div>
+                        </div>
+
+                        <div class="config-card" id="card_skus2">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_sku2_title">Molecules Names (A-z)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newSku2Input"><button class="btn-add-sm" onclick="addConfig('skus2')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="skus2List"></ul>
+                            </div>
+                        </div>
+
+                        <div class="config-card" id="card_products">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_p_title">العلامات التجارية Brands (A-Z)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newProductInput"><button class="btn-add-sm" onclick="addConfig('products')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="productsList"></ul>
+                            </div>
+                        </div>
+                        
+                        <div class="config-card" id="card_suppliers">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_supplier_title">قائمة الموردين Suppliers (A-Z)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newSupplierInput"><button class="btn-add-sm" onclick="addConfig('suppliers')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="suppliersList"></ul>
+                            </div>
+                        </div>
+                        
+                        <div class="config-card" id="card_status">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_s_title">الحالات الوصفية Status (A-Z)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newStatusInput"><button class="btn-add-sm" onclick="addConfig('status')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="statusList"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-column">
+                        <div class="config-card" id="card_milestones">
+                            <div class="config-summary" onclick="toggleConfig(this)">
+                                <h3 data-i18n="conf_m_title">قائمة المراحل Milestones (Custom)</h3>
+                                <span class="caret">▼</span>
+                            </div>
+                            <div class="config-content">
+                                <div style="display:flex; gap:10px;"><input type="text" id="newMilestoneInput"><button class="btn-add-sm" onclick="addConfig('milestones')" data-i18n="btn_add_sm">إضافة</button></div>
+                                <ul class="config-list" id="milestonesList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-zo20b1z6NXYY4V74qZJmQ_bVQmuYVYY",
+            authDomain: "rm02-46fc9.firebaseapp.com",
+            projectId: "rm02-46fc9",
+            storageBucket: "rm02-46fc9.firebasestorage.app",
+            messagingSenderId: "794360720321",
+            appId: "1:794360720321:web:358b473c52347fe66e5d40",
+            measurementId: "G-PDB9VKXDZH"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const globalDocRef = doc(db, "pharma_erp", "global_data");
+
+        let milestonesData = [];
+        let confProducts = [], confSkus = [], confSkus2 = [], confSuppliers = [], confMilestones = [], confStatus = [];
+        let hiddenCoreLists = [];
+        let pendingForecastData = null; 
+        
+        let chartStatusInstance=null, chartBrandsInstance=null, chartBottleneckInstance=null, chartSupplierInstance=null;
+        let chartStatusState = { mode: 'main', currentStatus: null }; 
+        
+        const ADMIN_PWD = "1234";
+
+        const coreListsMap = { 'products': 'conf_p_title', 'skus': 'conf_sku_title', 'skus2': 'conf_sku2_title', 'suppliers': 'conf_supplier_title', 'status': 'conf_s_title', 'milestones': 'conf_m_title' };
+        const corePropsMap = { 'products': 'productName', 'skus': 'skuName', 'skus2': 'sku2Name', 'suppliers': 'supplier', 'status': 'mainStatus', 'milestones': 'milestone' };
+
+        function sortArray(arr) { 
+            if (!arr) return [];
+            const items = Array.isArray(arr) ? arr : Object.values(arr);
+            return items.filter(Boolean).sort((a,b) => String(a).localeCompare(String(b))); 
+        }
+
+        // الترتيب الجديد للمسمى المدمج بعد إزالة Molecules Name
+        function getFullProductName(item) {
+            return [item.skuName, item.productName].filter(Boolean).join(' - ') || '-';
+        }
+
+        function updateWelcomeText() { document.getElementById('welcomeUserText').innerText = currentLang === 'ar' ? `مرحباً بك` : `Welcome`; }
+
+        window.attemptLogin = () => {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'flex';
+            updateWelcomeText(); switchTab('maindash'); 
+        }
+
+        window.logout = () => {
+            if(confirm(currentLang === 'ar' ? 'العودة للشاشة الافتتاحية؟' : 'Go back to Start Screen?')) {
+                document.getElementById('appScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open');
+            }
+        }
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+        window.toggleConfig = (el) => { const content = el.nextElementSibling; const caret = el.querySelector('.caret'); content.classList.toggle('open'); caret.classList.toggle('open'); }
+
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabName}`).classList.add('active');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+            
+            const titles = { 
+                'maindash': currentLang === 'ar' ? 'اللوحة الرئيسية' : 'Main Dashboard',
+                'tracker': currentLang === 'ar' ? 'شاشة إدخال الخطة (Forecast)' : 'Forecast Data Entry', 
+                'followup': currentLang === 'ar' ? 'شاشة التحديث الفعلي (Actuals)' : 'Actuals Update Screen', 
+                'config': currentLang === 'ar' ? 'شاشة الإعدادات (Config)' : 'Configuration View', 
+                'reports': currentLang === 'ar' ? 'لوحات القياس الفرعية (Dashboards)' : 'Dashboards & Reports' 
+            };
+            document.getElementById('pageTitle').innerText = titles[tabName];
+            
+            document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open');
+            if(tabName === 'reports') renderDashboards();
+            if(tabName === 'maindash') renderTimeline();
+        }
+
+        const translationDict = { "Identifying Supplier": "تحديد المورد", "Signing agreement and agreed on commercial terms": "توقيع الاتفاقية", "Collecting all registration documents along with the CPP": "تجميع وثائق التسجيل", "Dossier Submission to IMOH – final registration": "التقديم لوزارة الصحة", "Ordering the product + Analysis stage": "مرحلة الطلب والتحليل", "Product launch": "إطلاق المنتج", "New product": "منتج جديد", "Under Discussion": "قيد المناقشة", "No Brand": "بدون علامة تجارية" };
+
+        let currentLang = localStorage.getItem('pharmaLang') || 'ar';
+        const translations = {
+            ar: {
+                tab_maindash: "🏠 اللوحة الرئيسية", tab_tracker: "📝 الخطة (Forecast)", tab_followup: "🔄 التحديث الفعلي (Actuals)", tab_reports: "📊 لوحات القياس (Dashboards)", tab_config: "⚙️ الإعدادات (Config)", btn_logout: "🚪 العودة للبداية",
+                lbl_product: "العلامة (Brand) - اختياري", lbl_sku: "رمز الوحدة (SKU)", lbl_sku2: "المادة الفعالة (Molecules Name)", lbl_supplier: "المورد - اختياري", lbl_milestone: "المرحلة", lbl_status: "الحالة الوصفية", lbl_notes: "ملاحظات",
+                lbl_start: "تاريخ البدء المخطط", lbl_end: "تاريخ الانتهاء المخطط", lbl_actual_start: "بدء فعلي", lbl_actual_end: "نهاية فعلية",
+                btn_add_forecast: "➕ إضافة لخطة التوقع", btn_export: "📊 تصدير إكسيل", btn_save: "💾 حفظ التحديث", btn_cancel: "إلغاء", btn_add_sm: "إضافة", 
+                th_product: "العلامة", th_sku: "SKU", th_sku2: "Molecules Name", th_supplier: "المورد", th_notes: "ملاحظات", th_milestone: "المرحلة", th_status: "الحالة", th_start: "بداية مخططة", th_end: "نهاية مخططة", th_actual_start: "بدء فعلي", th_actual_end: "نهاية فعلية", th_progress: "حالة التنفيذ", th_view: "المسار", th_action: "إجراءات",
+                followup_title: "شاشة المتابعة والتحديث الفعلي", followup_desc: "تحديث التواريخ وحالة التنفيذ الأوتوماتيكية أو اليدوية.", edit_title: "تحديث تواريخ وحالة الإنجاز",
+                dash_brands: "إجمالي السجلات الموثقة", dash_miles: "المراحل المخططة", dash_completed: "المراحل المكتملة", dash_delayed: "المراحل المتأخرة", chart_status_title: "توزيع حالات الإنجاز (اضغط للتفاصيل)", chart_brand_title: "نسبة الإنجاز", chart_delayed_title: "المراحل الأكثر تأخراً (Bottlenecks)", chart_supplier_title: "توزيع الإنجاز حسب المورد",
+                timeline_title: "الجدول الزمني للأصناف حسب المرحلة (Quarterly)",
+                conf_p_title: "العلامات التجارية Brands (A-Z)", conf_sku_title: "رموز الوحدات SKUs (A-Z)", conf_sku2_title: "المواد الفعالة Molecules Names (A-Z)", conf_supplier_title: "الموردين (A-Z)", conf_m_title: "المراحل (ترتيب مخصص)", conf_s_title: "الحالات الوصفية (A-Z)",
+                status_notstarted: "لم يبدأ ⏳", status_delayed: "متأخر 🚨", status_progress: "قيد التنفيذ 🔄", status_completed: "مكتمل ✅",
+                msg_dup_conf: "الإدخال موجود مسبقاً!", msg_dup_mile: "تنبيه: لا يمكن الإضافة! المرحلة موجودة لنفس العلامة والـ SKU.", msg_overlap: "تنبيه: يوجد تداخل في التواريخ المخططة مع مرحلة أخرى لنفس الـ SKU.", msg_date_err: "خطأ: البداية المخططة يجب أن تكون قبل النهاية!", msg_cannot_delete: "عذراً، لا يمكن الحذف! هذه القائمة مستخدمة."
+            },
+            en: {
+                tab_maindash: "🏠 Main Dashboard", tab_tracker: "📝 Forecast", tab_followup: "🔄 Actuals Update", tab_reports: "📊 Dashboards", tab_config: "⚙️ Config", btn_logout: "🚪 Start Screen",
+                lbl_product: "Brand Name - Optional", lbl_sku: "SKU", lbl_sku2: "Molecules Name", lbl_supplier: "Supplier - Optional", lbl_milestone: "Milestone", lbl_status: "Desc Status", lbl_notes: "Notes",
+                lbl_start: "Plan Start", lbl_end: "Plan End", lbl_actual_start: "Actual Start", lbl_actual_end: "Actual End",
+                btn_add_forecast: "➕ Add Forecast", btn_export: "📊 Export Excel", btn_save: "💾 Save Update", btn_cancel: "Cancel", btn_add_sm: "Add", 
+                th_product: "Brand", th_sku: "SKU", th_sku2: "Molecules Name", th_supplier: "Supplier", th_notes: "Notes", th_milestone: "Milestone", th_status: "Status", th_start: "Plan Start", th_end: "Plan End", th_actual_start: "Actual Start", th_actual_end: "Actual End", th_progress: "Execution Status", th_view: "Track", th_action: "Actions",
+                followup_title: "Actuals vs Forecast Update", followup_desc: "Update dates and execution status here.", edit_title: "Update Progress Dates & Status",
+                dash_brands: "Total Logged Items", dash_miles: "Planned Milestones", dash_completed: "Completed Milestones", dash_delayed: "Delayed Milestones", chart_status_title: "Status Distribution (Click to Drilldown)", chart_brand_title: "Completion %", chart_delayed_title: "Most Delayed Milestones (Bottlenecks)", chart_supplier_title: "Completion Distribution by Supplier",
+                timeline_title: "Timeline of Items by Milestone (Quarterly)",
+                conf_p_title: "Brands (A-Z)", conf_sku_title: "SKUs (A-Z)", conf_sku2_title: "Molecules Names (A-z)", conf_supplier_title: "Suppliers (A-Z)", conf_m_title: "Milestones (Custom)", conf_s_title: "Desc Status (A-Z)",
+                status_notstarted: "Not Started ⏳", status_delayed: "Delayed 🚨", status_progress: "In Progress 🔄", status_completed: "Completed ✅",
+                msg_dup_conf: "Entry already exists!", msg_dup_mile: "Alert: Milestone already exists for this Brand and SKU.", msg_overlap: "Alert: Planned dates overlap with another milestone for this SKU.", msg_date_err: "Error: Plan Start date must be before Plan End date!", msg_cannot_delete: "Sorry, cannot delete! This list is used."
+            }
+        };
+
+        function translateItem(item) { return (currentLang === 'ar' && translationDict[item]) ? translationDict[item] : item; }
+
+        function applyLanguage() {
+            document.documentElement.lang = currentLang; document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.getElementById('langBtn').innerText = currentLang === 'ar' ? 'English' : 'العربية';
+            document.querySelectorAll('[data-i18n]').forEach(elem => { const key = elem.getAttribute('data-i18n'); if (translations[currentLang][key]) elem.innerText = translations[currentLang][key]; });
+            updateWelcomeText(); applyHiddenLists(); renderConfig(); renderTables(); 
+            if(document.getElementById('view-reports').classList.contains('active')) renderDashboards();
+            if(document.getElementById('view-maindash').classList.contains('active')) renderTimeline();
+            updateTimelineSlicer();
+            updateIdentifier();
+        }
+
+        window.toggleLanguage = () => { currentLang = currentLang === 'ar' ? 'en' : 'ar'; localStorage.setItem('pharmaLang', currentLang); applyLanguage(); }
+
+        onSnapshot(globalDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                milestonesData = data.milestonesData || []; 
+                
+                confProducts = sortArray(data.confProducts || data.products || []);
+                confSkus = sortArray(data.confSkus || data.skus || []); 
+                confSkus2 = sortArray(data.confSkus2 || data.skus2 || []); 
+                confSuppliers = sortArray(data.confSuppliers || data.suppliers || []);
+                confMilestones = data.confMilestones || data.milestones || []; 
+                confStatus = sortArray(data.confStatus || data.status || []);
+                
+                hiddenCoreLists = data.hiddenCoreLists || [];
+            }
+            applyHiddenLists();
+            renderConfig(); renderTables();
+            updateTimelineSlicer();
+            if(document.getElementById('view-reports').classList.contains('active')) renderDashboards();
+            if(document.getElementById('view-maindash').classList.contains('active')) renderTimeline();
+        });
+
+        function applyHiddenLists() {
+            Object.keys(coreListsMap).forEach(key => {
+                const bodyHasClass = document.body.classList.contains('hide-' + key);
+                const shouldHide = hiddenCoreLists.includes(key);
+                if (shouldHide && !bodyHasClass) document.body.classList.add('hide-' + key);
+                else if (!shouldHide && bodyHasClass) document.body.classList.remove('hide-' + key);
+            });
+
+            if(document.getElementById('productName')) document.getElementById('productName').required = false; 
+            if(document.getElementById('skuName')) document.getElementById('skuName').required = !hiddenCoreLists.includes('skus');
+            if(document.getElementById('supplierName')) document.getElementById('supplierName').required = false;
+            if(document.getElementById('milestone')) document.getElementById('milestone').required = !hiddenCoreLists.includes('milestones');
+            if(document.getElementById('mainStatus')) document.getElementById('mainStatus').required = !hiddenCoreLists.includes('status');
+        }
+
+        function fillDropdown(elementId, dataArray, defaultText, allowEmpty = false) {
+            const selectElement = document.getElementById(elementId);
+            if (!selectElement) return;
+
+            const currentValue = selectElement.value;
+            selectElement.innerHTML = '';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.text = '-- ' + defaultText + ' --';
+            if (!allowEmpty) defaultOption.disabled = true;
+            if (!currentValue) defaultOption.selected = true;
+            selectElement.appendChild(defaultOption);
+
+            const itemsToIterate = Array.isArray(dataArray) ? dataArray : Object.values(dataArray || {});
+
+            itemsToIterate.forEach(item => {
+                if (item) {
+                    const opt = document.createElement('option');
+                    opt.value = String(item).trim();
+                    opt.text = translateItem(String(item).trim());
+                    if (String(item).trim() === String(currentValue).trim()) opt.selected = true;
+                    selectElement.appendChild(opt);
+                }
+            });
+        }
+
+        function renderConfig() {
+            const selectText = currentLang === 'ar' ? 'اختر' : 'Select';
+            
+            fillDropdown('productName', confProducts, currentLang === 'ar' ? 'بدون علامة تجارية' : 'No Brand', true);
+            fillDropdown('skuName', confSkus, selectText); 
+            // sku2Name يتم تعبئته فقط إذا كان موجوداً (وهو غير موجود إلا في الإعدادات)
+            fillDropdown('sku2Name', confSkus2, selectText); 
+            fillDropdown('supplierName', confSuppliers, selectText, true); 
+            fillDropdown('milestone', confMilestones, selectText); 
+            fillDropdown('mainStatus', confStatus, selectText);
+            
+            const popList = (id, arr, type) => {
+                const el = document.getElementById(id); if(!el) return; el.innerHTML = '';
+                const items = Array.isArray(arr) ? arr : Object.values(arr || {});
+                items.forEach((item, i) => {
+                    let sortHTML = '';
+                    if (type === 'milestones') {
+                        sortHTML = `<div class="sort-btns"><button class="sort-btn" onclick="moveMilestone(${i}, -1)">⬆️</button><button class="sort-btn" onclick="moveMilestone(${i}, 1)">⬇️</button></div>`;
+                    }
+                    el.innerHTML += `<li><span>${translateItem(item)}</span><div style="display:flex; gap:10px;">${sortHTML}<button class="action-btn btn-delete" onclick="deleteConfigItem('${type}', ${i})">✖</button></div></li>`;
+                });
+            };
+            
+            popList('productsList', confProducts, 'products'); 
+            popList('skusList', confSkus, 'skus'); 
+            popList('skus2List', confSkus2, 'skus2'); 
+            popList('suppliersList', confSuppliers, 'suppliers'); 
+            popList('milestonesList', confMilestones, 'milestones'); 
+            popList('statusList', confStatus, 'status');
+            
+            updateIdentifier(); 
+        }
+
+        function updateIdentifier() {
+            const brandEl = document.getElementById('productName');
+            const skuEl = document.getElementById('skuName');
+            
+            const brand = brandEl && brandEl.selectedIndex > 0 ? brandEl.options[brandEl.selectedIndex].text : '';
+            const sku = skuEl && skuEl.selectedIndex > 0 ? skuEl.options[skuEl.selectedIndex].text : '';
+            
+            const parts = [];
+            if(sku) parts.push(sku);
+            if(brand) parts.push(brand);
+            
+            const idField = document.getElementById('fullIdentifier');
+            if(idField) idField.value = parts.join(' - ');
+        }
+        
+        ['productName', 'skuName'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('change', updateIdentifier);
+        });
+
+        window.clearFormFields = () => {
+            const selects = ['productName', 'skuName', 'supplierName', 'milestone', 'mainStatus'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = ''; 
+            });
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('notesInput').value = '';
+            document.getElementById('fullIdentifier').value = '';
+        };
+
+        window.addConfig = (type) => {
+            const map = { 
+                products:{arr:confProducts, id:'newProductInput', sort:true}, 
+                skus:{arr:confSkus, id:'newSkuInput', sort:true}, 
+                skus2:{arr:confSkus2, id:'newSku2Input', sort:true}, 
+                suppliers:{arr:confSuppliers, id:'newSupplierInput', sort:true}, 
+                milestones:{arr:confMilestones, id:'newMilestoneInput', sort:false}, 
+                status:{arr:confStatus, id:'newStatusInput', sort:true} 
+            };
+            const input = document.getElementById(map[type].id); const val = input.value.trim();
+            
+            if(val) {
+                const currentArr = Array.isArray(map[type].arr) ? map[type].arr : Object.values(map[type].arr || {});
+                if (currentArr.some(item => String(item).toLowerCase() === val.toLowerCase())) return alert(translations[currentLang].msg_dup_conf);
+                
+                currentArr.push(val); 
+                let arrToSave = map[type].sort ? sortArray(currentArr) : currentArr;
+                
+                let fireBaseField = 'conf' + type.charAt(0).toUpperCase() + type.slice(1);
+                setDoc(globalDocRef, {[fireBaseField]: arrToSave}, {merge:true}); 
+                input.value=''; 
+            }
+        }
+        
+        window.deleteConfigItem = (type, idx) => {
+            const mapArrays = { 'products': confProducts, 'skus': confSkus, 'skus2': confSkus2, 'suppliers': confSuppliers, 'milestones': confMilestones, 'status': confStatus };
+            let targetArray = Array.isArray(mapArrays[type]) ? mapArrays[type] : Object.values(mapArrays[type] || {});
+            
+            const targetProp = corePropsMap[type]; 
+            const itemToDelete = targetArray[idx];
+            
+            if (milestonesData.some(record => record[targetProp] === itemToDelete)) return alert(translations[currentLang].msg_cannot_delete);
+
+            const arrName = 'conf'+type.charAt(0).toUpperCase()+type.slice(1);
+            if(prompt(currentLang === 'ar' ? 'كلمة المرور:' : 'Password:') === ADMIN_PWD) { 
+                targetArray.splice(idx, 1); setDoc(globalDocRef, {[arrName]: targetArray}, {merge:true}); 
+            } else { alert(currentLang === 'ar' ? 'كلمة مرور خاطئة!' : 'Wrong password!'); }
+        }
+
+        window.moveMilestone = (idx, direction) => {
+            if(prompt('Password:') !== ADMIN_PWD) return;
+            let currentArr = Array.isArray(confMilestones) ? confMilestones : Object.values(confMilestones || {});
+            if (direction === -1 && idx > 0) [currentArr[idx - 1], currentArr[idx]] = [currentArr[idx], currentArr[idx - 1]];
+            else if (direction === 1 && idx < currentArr.length - 1) [currentArr[idx + 1], currentArr[idx]] = [currentArr[idx], currentArr[idx + 1]];
+            setDoc(globalDocRef, { confMilestones: currentArr }, {merge:true});
+        }
+
+        function checkDateOverlap(product, sku, newStart, newEnd, excludeIndex = -1) {
+            const start = new Date(newStart); const end = new Date(newEnd);
+            return milestonesData.some((item, idx) => {
+                if (idx === excludeIndex || item.productName !== product || item.skuName !== sku) return false;
+                return (start <= new Date(item.endDate) && end >= new Date(item.startDate));
+            });
+        }
+
+        function calculateProgressStatus(pStart, pEnd, aStart, aEnd, manualStatus) {
+            const t = translations[currentLang]; 
+            
+            if (manualStatus && manualStatus !== 'Auto') {
+                const map = { 
+                    'Completed': { text: t.status_completed, class: 'bg-completed' }, 
+                    'In Progress': { text: t.status_progress, class: 'bg-progress' }, 
+                    'Delayed': { text: t.status_delayed, class: 'bg-delayed' }, 
+                    'Not Started': { text: t.status_notstarted, class: 'bg-notstarted' } 
+                };
+                return { raw: manualStatus, text: map[manualStatus].text, class: map[manualStatus].class };
+            }
+
+            const today = new Date(); today.setHours(0,0,0,0);
+            const planStart = new Date(pStart); planStart.setHours(0,0,0,0);
+            const planEnd = new Date(pEnd); planEnd.setHours(0,0,0,0);
+            
+            let rawStatus = "Not Started";
+            
+            if (aEnd && aEnd.trim() !== "") { 
+                rawStatus = "Completed"; 
+            } 
+            else if (aStart && aStart.trim() !== "") { 
+                if (today > planEnd) {
+                    rawStatus = "Delayed";
+                } else {
+                    rawStatus = "In Progress";
+                }
+            } 
+            else { 
+                if (today > planStart) {
+                    rawStatus = "Delayed";
+                } else {
+                    rawStatus = "Not Started"; 
+                }
+            }
+            
+            const map = { 
+                'Completed': { text: t.status_completed, class: 'bg-completed' }, 
+                'In Progress': { text: t.status_progress, class: 'bg-progress' }, 
+                'Delayed': { text: t.status_delayed, class: 'bg-delayed' }, 
+                'Not Started': { text: t.status_notstarted, class: 'bg-notstarted' } 
+            };
+            return { raw: rawStatus, text: map[rawStatus].text, class: map[rawStatus].class };
+        }
+
+        document.getElementById('trackerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const product = document.getElementById('productName').value || ""; 
+            const sku = document.getElementById('skuName').value || "";
+            // إبقاء المتغير فارغ ليتوافق مع هيكلية Firebase السابقة إذا تطلب الأمر
+            const sku2 = "";
+            const ms = document.getElementById('milestone').value || "";
+            
+            if(!hiddenCoreLists.includes('milestones') && !hiddenCoreLists.includes('skus')) {
+                if(milestonesData.some(i => i.productName === product && i.skuName === sku && i.milestone === ms)) return alert(translations[currentLang].msg_dup_mile);
+            }
+            
+            const pStart = document.getElementById('startDate').value; const pEnd = document.getElementById('endDate').value;
+            if(new Date(pStart) > new Date(pEnd)) return alert(translations[currentLang].msg_date_err);
+            if (!hiddenCoreLists.includes('skus') && checkDateOverlap(product, sku, pStart, pEnd)) return alert(translations[currentLang].msg_overlap);
+
+            pendingForecastData = { 
+                productName: product, skuName: sku, sku2Name: sku2,
+                supplier: document.getElementById('supplierName').value || "", 
+                milestone: ms, mainStatus: document.getElementById('mainStatus').value || "", 
+                startDate: pStart, endDate: pEnd, notes: document.getElementById('notesInput').value, 
+                actualStartDate: "", actualEndDate: "",
+                manualExecutionStatus: "Auto"
+            };
+            
+            showConfirmModal(pendingForecastData);
+        });
+
+        window.showConfirmModal = (data) => {
+            document.getElementById('confIdText').innerText = document.getElementById('fullIdentifier').value;
+            document.getElementById('confMileText').innerText = translateItem(data.milestone);
+            document.getElementById('confDatesText').innerText = `${data.startDate} ➔ ${data.endDate}`;
+            
+            const records = milestonesData.filter(i => i.productName === data.productName && i.skuName === data.skuName);
+            let html = ''; 
+            let highestCompletedIdx = -1;
+            const cMilestones = Array.isArray(confMilestones) ? confMilestones : Object.values(confMilestones || {});
+            
+            cMilestones.forEach((m, idx) => {
+                let sClass = '', icon = idx + 1;
+                const rec = records.find(r => r.milestone === m);
+                if (rec && calculateProgressStatus(rec.startDate, rec.endDate, rec.actualStartDate, rec.actualEndDate, rec.manualExecutionStatus).raw === 'Completed') {
+                    sClass = 'completed'; icon = '✓';
+                    highestCompletedIdx = Math.max(highestCompletedIdx, idx);
+                }
+                if (m === data.milestone) { sClass = 'active'; } 
+                html += `<div class="step ${sClass}"><div class="step-icon">${icon}</div><div class="step-label">${translateItem(m)}</div></div>`;
+            });
+            
+            let targetIdx = cMilestones.indexOf(data.milestone);
+            let progressPercent = 0;
+            if (cMilestones.length > 1 && targetIdx > 0) progressPercent = (targetIdx / (cMilestones.length - 1)) * 83.33;
+            
+            const lineDir = currentLang === 'ar' ? 'right' : 'left';
+            document.getElementById('confirmStepperContainer').innerHTML = `<div style="position: absolute; top: 20px; ${lineDir}: 8.33%; height: 4px; background-color: #1e293b; width: 83.33%; z-index: 1;"></div><div class="progress-line" style="${lineDir}: 8.33%; width: ${progressPercent}%; z-index: 2; background-color: var(--accent-blue); box-shadow: 0 0 12px var(--accent-blue);"></div>${html}`;
+            
+            document.getElementById('confirmModal').classList.add('active');
+        };
+
+        window.confirmSaveForecast = () => {
+            if(pendingForecastData) {
+                milestonesData.push(pendingForecastData);
+                setDoc(globalDocRef, { milestonesData }, { merge: true });
+                clearFormFields();
+                closeConfirmModal();
+                pendingForecastData = null;
+            }
+        };
+
+        window.closeConfirmModal = () => {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingForecastData = null;
+        };
+
+        function renderTables() {
+            const tbodyTracker = document.getElementById('tableBodyTracker'); tbodyTracker.innerHTML = '';
+            const tbodyFollowup = document.getElementById('tableBodyFollowup'); tbodyFollowup.innerHTML = '';
+            
+            milestonesData.slice().reverse().forEach((item, index) => {
+                const actIdx = milestonesData.length - 1 - index;
+                const sInfo = calculateProgressStatus(item.startDate, item.endDate, item.actualStartDate, item.actualEndDate, item.manualExecutionStatus);
+                const dispBrand = item.productName ? translateItem(item.productName) : '-';
+                
+                tbodyTracker.innerHTML += `<tr>
+                    <td class="col_skus">${item.skuName||'-'}</td>
+                    <td class="col_products"><strong style="color:var(--accent-blue)">${dispBrand}</strong></td>
+                    <td class="col_suppliers">${item.supplier||'-'}</td>
+                    <td class="col_milestones">${translateItem(item.milestone) || '-'}</td>
+                    <td class="nowrap-col">${item.startDate}</td><td class="nowrap-col">${item.endDate}</td>
+                    <td><button class="action-btn btn-track" onclick="drawVisualTracker(${actIdx}, this)">👁️ المسار</button></td>
+                </tr>`;
+
+                tbodyFollowup.innerHTML += `<tr>
+                    <td class="col_skus">${item.skuName||'-'}</td>
+                    <td class="col_products"><strong style="color:var(--accent-blue)">${dispBrand}</strong></td>
+                    <td class="col_suppliers">${item.supplier||'-'}</td>
+                    <td class="col_milestones">${translateItem(item.milestone) || '-'}</td>
+                    <td class="nowrap-col">${item.startDate}</td><td class="nowrap-col" style="color:#60a5fa; font-weight:bold;">${item.actualStartDate||'--'}</td>
+                    <td class="nowrap-col">${item.endDate}</td><td class="nowrap-col" style="color:#60a5fa; font-weight:bold;">${item.actualEndDate||'--'}</td>
+                    <td><span class="badge ${sInfo.class}">${sInfo.text}</span></td>
+                    <td class="nowrap-col"><button class="action-btn btn-edit" onclick="openUpdateModal(${actIdx})">✏️ تحديث</button> <button class="action-btn btn-delete" onclick="deleteRecord(${actIdx})">✖ حذف</button></td>
+                </tr>`;
+            });
+            applyFilters('dataTableTracker', 'filter-tracker'); applyFilters('dataTableFollowup', 'filter-fw');
+        }
+
+        window.drawVisualTracker = (actIdx, btnEl) => {
+            document.querySelectorAll('.btn-track').forEach(btn => btn.classList.remove('active-track'));
+            if(btnEl) btnEl.classList.add('active-track');
+            
+            const item = milestonesData[actIdx];
+            document.getElementById('visualTrackerCard').style.display = 'block';
+            
+            document.getElementById('trackerTitle').innerText = "مسار الدواء: " + getFullProductName(item);
+            
+            const records = milestonesData.filter(i => i.productName === item.productName && i.skuName === item.skuName);
+            let html = ''; let highestCompletedIdx = -1; let activeIdx = -1;
+            
+            const cMilestones = Array.isArray(confMilestones) ? confMilestones : Object.values(confMilestones || {});
+            
+            cMilestones.forEach((m, idx) => {
+                const rec = records.find(r => r.milestone === m);
+                if(rec && calculateProgressStatus(rec.startDate, rec.endDate, rec.actualStartDate, rec.actualEndDate, rec.manualExecutionStatus).raw === 'Completed') highestCompletedIdx = Math.max(highestCompletedIdx, idx);
+            });
+
+            cMilestones.forEach((m, idx) => {
+                let sClass = '', icon = idx + 1;
+                const rec = records.find(r => r.milestone === m);
+                let stat = rec ? calculateProgressStatus(rec.startDate, rec.endDate, rec.actualStartDate, rec.actualEndDate, rec.manualExecutionStatus).raw : 'Not Started';
+
+                if (stat === 'Completed') { sClass = 'completed'; icon = '✓'; } 
+                else if (stat === 'In Progress' || stat === 'Delayed') { sClass = 'active'; activeIdx = idx; } 
+                else if (idx === highestCompletedIdx + 1 && activeIdx === -1) { sClass = 'active'; activeIdx = idx; }
+                html += `<div class="step ${sClass}"><div class="step-icon">${icon}</div><div class="step-label">${translateItem(m)}</div></div>`;
+            });
+            
+            let targetIdx = activeIdx !== -1 ? activeIdx : highestCompletedIdx;
+            let progressPercent = 0;
+            if (cMilestones.length > 1 && targetIdx > 0) progressPercent = (targetIdx / (cMilestones.length - 1)) * 83.33;
+            if (targetIdx === cMilestones.length - 1 && highestCompletedIdx === targetIdx) progressPercent = 83.33; 
+            
+            const lineDir = currentLang === 'ar' ? 'right' : 'left';
+            document.getElementById('stepperContainer').innerHTML = `<div style="position: absolute; top: 20px; ${lineDir}: 8.33%; height: 4px; background-color: #1e293b; width: 83.33%; z-index: 1;"></div><div class="progress-line" style="${lineDir}: 8.33%; width: ${progressPercent}%; z-index: 2;"></div>${html}`;
+            document.getElementById('visualTrackerCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        window.closeTracker = () => { document.getElementById('visualTrackerCard').style.display = 'none'; };
+
+        window.openUpdateModal = (idx) => {
+            const item = milestonesData[idx];
+            document.getElementById('editIndex').value = idx;
+            document.getElementById('editItemName').value = getFullProductName(item);
+            document.getElementById('editMilestone').value = translateItem(item.milestone||'-');
+            document.getElementById('editPlanStart').value = item.startDate; 
+            document.getElementById('editPlanEnd').value = item.endDate;     
+            document.getElementById('editActualStart').value = item.actualStartDate || ''; 
+            document.getElementById('editActualEnd').value = item.actualEndDate || '';
+            
+            document.getElementById('editExecutionStatus').value = item.manualExecutionStatus || 'Auto';
+            
+            document.getElementById('updateModal').classList.add('active');
+        };
+        window.closeUpdateModal = () => document.getElementById('updateModal').classList.remove('active');
+        
+        window.saveUpdate = () => {
+            const idx = parseInt(document.getElementById('editIndex').value);
+            const aStart = document.getElementById('editActualStart').value; 
+            const aEnd = document.getElementById('editActualEnd').value;
+            const manStatus = document.getElementById('editExecutionStatus').value;
+            
+            if(aStart && aEnd && new Date(aStart) > new Date(aEnd)) return alert(currentLang === 'ar' ? "خطأ: البداية قبل النهاية!" : "Error!");
+            
+            milestonesData[idx].actualStartDate = aStart; 
+            milestonesData[idx].actualEndDate = aEnd;
+            milestonesData[idx].manualExecutionStatus = manStatus;
+            
+            setDoc(globalDocRef, { milestonesData }, { merge: true }); 
+            closeUpdateModal();
+        };
+
+        window.deleteRecord = (idx) => { 
+            if(confirm(currentLang==='ar'?'تأكيد الحذف نهائياً؟':'Confirm Delete?')) { 
+                if(prompt(currentLang === 'ar' ? 'كلمة المرور 1234:' : 'Password:') === ADMIN_PWD) {
+                    milestonesData.splice(idx, 1); setDoc(globalDocRef, { milestonesData }, { merge: true }); 
+                } else alert(currentLang==='ar'?'كلمة مرور خاطئة!':'Wrong password!');
+            } 
+        };
+
+        window.exportForecastExcel = () => {
+            if (milestonesData.length === 0) return;
+            let csv = currentLang === 'ar' ? "\uFEFFرمز الوحدة (SKU),العلامة التجارية,المورد,المعرف المدمج (Product),المرحلة,الحالة الوصفية,تاريخ البدء المخطط,تاريخ الانتهاء المخطط,ملاحظات\n" : "\uFEFFSKU,Brand,Supplier,Product Identifier,Milestone,Status,Plan Start,Plan End,Notes\n";
+            milestonesData.forEach(i => {
+                const fullId = getFullProductName(i);
+                csv += `"${i.skuName || ''}","${translateItem(i.productName)||''}","${translateItem(i.supplier) || ''}","${fullId}","${translateItem(i.milestone)}","${translateItem(i.mainStatus)}","${i.startDate}","${i.endDate}","${i.notes || ''}"\n`; 
+            });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `Forecast_Export_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+        };
+
+        window.exportToExcel = () => {
+            if (milestonesData.length === 0) return;
+            let csv = currentLang === 'ar' ? "\uFEFFرمز الوحدة (SKU),العلامة التجارية (Brand),المورد,المرحلة,تاريخ البدء المخطط,تاريخ الانتهاء المخطط,تاريخ البدء الفعلي,تاريخ الانتهاء الفعلي,حالة التنفيذ\n" : "\uFEFFSKU,Brand,Supplier,Milestone,Plan Start,Plan End,Actual Start,Actual End,Execution Status\n";
+            milestonesData.forEach(i => { 
+                const sInfo = calculateProgressStatus(i.startDate, i.endDate, i.actualStartDate, i.actualEndDate, i.manualExecutionStatus);
+                csv += `"${i.skuName || ''}","${translateItem(i.productName)||''}","${translateItem(i.supplier) || ''}","${translateItem(i.milestone)}","${i.startDate}","${i.endDate}","${i.actualStartDate || ''}","${i.actualEndDate || ''}","${sInfo.text}"\n`; 
+            });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `Actuals_Export_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+        };
+
+        Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = "'Segoe UI', Tahoma, sans-serif";
+        function getGradient(ctx, colorStart, colorEnd) { let gradient = ctx.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, colorStart); gradient.addColorStop(1, colorEnd); return gradient; }
+
+        window.resetChartStatus = () => { chartStatusState.mode = 'main'; chartStatusState.currentStatus = null; document.getElementById('btnBackChartStatus').style.display = 'none'; renderDashboards(); }
+
+        function renderDrilldownChart() {
+            let itemCounts = {};
+            milestonesData.forEach(i => {
+                if(calculateProgressStatus(i.startDate, i.endDate, i.actualStartDate, i.actualEndDate, i.manualExecutionStatus).raw === chartStatusState.currentStatus) {
+                    let key = getFullProductName(i); 
+                    itemCounts[key] = (itemCounts[key] || 0) + 1;
+                }
+            });
+            const labels = Object.keys(itemCounts).map(l => translateItem(l)); const data = Object.values(itemCounts);
+            const ctx1 = document.getElementById('chartStatus').getContext('2d');
+            if(chartStatusInstance) chartStatusInstance.destroy();
+            chartStatusInstance = new Chart(ctx1, {
+                type: 'pie', data: { labels: labels.length > 0 ? labels : ['No Data'], datasets: [{ data: data.length > 0 ? data : [1], backgroundColor: labels.length > 0 ? labels.map((_, i) => `hsl(${(i * 360 / labels.length)}, 70%, 50%)`) : ['#334155'], borderWidth: 2, borderColor: 'rgba(15, 23, 42, 0.8)', hoverOffset: 15 }] },
+                options: { plugins: { legend: { position: 'right', labels: { color: '#f8fafc' } }, title: { display: true, text: translateItem(chartStatusState.currentStatus), color: '#fff' } }, maintainAspectRatio: false }
+            });
+        }
+
+        function updateTimelineSlicer() {
+            const tSlicer = document.getElementById('timelineSlicer');
+            if (!tSlicer) return;
+            
+            const usedMilestones = new Set();
+            milestonesData.forEach(i => { if (i.milestone) usedMilestones.add(i.milestone); });
+            
+            const currentTVal = tSlicer.value;
+            tSlicer.innerHTML = '<option value="">-- ' + (currentLang === 'ar' ? 'اختر المرحلة لعرض المسار' : 'Select Milestone to View Timeline') + ' --</option>';
+            
+            [...usedMilestones].sort().forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.text = translateItem(m);
+                if (m === currentTVal) opt.selected = true;
+                tSlicer.appendChild(opt);
+            });
+        }
+
+        window.renderTimeline = () => {
+            const slicer = document.getElementById('timelineSlicer');
+            const container = document.getElementById('timelineContainer');
+            const selectedMs = slicer.value;
+
+            if (!selectedMs) {
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-muted); font-size: 1.1rem; margin-top: 50px;">يرجى اختيار مرحلة (Milestone) لعرض المسار الزمني</div>`;
+                return;
+            }
+
+            const filteredData = milestonesData.filter(d => d.milestone === selectedMs && d.endDate);
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--status-delayed); font-size: 1.1rem; margin-top: 50px;">لا توجد أصناف مبرمجة لهذه المرحلة حالياً.</div>`;
+                return;
+            }
+
+            const grouped = {};
+            filteredData.forEach(item => {
+                const dateParts = item.endDate.split('-');
+                if (dateParts.length >= 2) {
+                    const year = dateParts[0];
+                    const month = parseInt(dateParts[1], 10);
+                    const quarter = Math.floor((month - 1) / 3) + 1; 
+                    
+                    const sortKey = `${year}-Q${quarter}`; 
+                    const displayLabel = `Q${quarter}-${year.substring(2)}`; 
+                    
+                    if (!grouped[sortKey]) {
+                        grouped[sortKey] = { label: displayLabel, items: [] };
+                    }
+                    grouped[sortKey].items.push(getFullProductName(item));
+                }
+            });
+
+            const sortedKeys = Object.keys(grouped).sort();
+
+            let html = '<div class="timeline-wrapper"><div class="timeline-track"></div>';
+            
+            sortedKeys.forEach(key => {
+                const group = grouped[key];
+                let itemsHtml = group.items.map(name => `<div class="timeline-item">${name}</div>`).join('');
+                
+                html += `
+                    <div class="timeline-node">
+                        <div class="timeline-point"></div>
+                        <div class="timeline-date">${group.label}</div>
+                        <div class="timeline-items">${itemsHtml}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        };
+
+        function renderDashboards() {
+            let comp=0, del=0, prog=0, not=0, brandStats={}, delayedStats={}, supplierStats={};
+            
+            milestonesData.forEach(i => {
+                const stat = calculateProgressStatus(i.startDate, i.endDate, i.actualStartDate, i.actualEndDate, i.manualExecutionStatus).raw;
+                if(stat==='Completed') comp++; else if(stat==='Delayed') { del++; delayedStats[i.milestone] = (delayedStats[i.milestone]||0)+1; } else if(stat==='In Progress') prog++; else not++;
+                
+                let bKey = getFullProductName(i);
+                if(!brandStats[bKey]) brandStats[bKey] = {t:0, c:0};
+                brandStats[bKey].t++; if(stat==='Completed') brandStats[bKey].c++;
+                if(i.supplier) { if(!supplierStats[i.supplier]) supplierStats[i.supplier] = {t:0, c:0}; supplierStats[i.supplier].t++; if(stat==='Completed') supplierStats[i.supplier].c++; }
+            });
+
+            document.getElementById('dash-total-brands').innerText = Object.keys(brandStats).length; document.getElementById('dash-total-miles').innerText = milestonesData.length; document.getElementById('dash-completed').innerText = comp; document.getElementById('dash-delayed').innerText = del;
+            
+            if (chartStatusState.mode === 'main') {
+                const ctx1 = document.getElementById('chartStatus').getContext('2d');
+                if(chartStatusInstance) chartStatusInstance.destroy();
+                chartStatusInstance = new Chart(ctx1, {
+                    type: 'pie', data: { labels: [translations[currentLang].status_completed, translations[currentLang].status_delayed, translations[currentLang].status_progress, translations[currentLang].status_notstarted], datasets: [{ data: [comp, del, prog, not], backgroundColor: [getGradient(ctx1, '#34d399', '#059669'), getGradient(ctx1, '#f87171', '#dc2626'), getGradient(ctx1, '#60a5fa', '#2563eb'), '#64748b'], borderWidth:2, borderColor: 'rgba(15, 23, 42, 0.8)', hoverOffset: 15 }] },
+                    options: { plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 20 } } }, maintainAspectRatio: false, onClick: (e, activeElements) => { if(activeElements.length > 0) { chartStatusState.currentStatus = ['Completed', 'Delayed', 'In Progress', 'Not Started'][activeElements[0].index]; chartStatusState.mode = 'drilldown'; document.getElementById('btnBackChartStatus').style.display = 'inline-block'; renderDrilldownChart(); } } }
+                });
+                document.getElementById('btnBackChartStatus').style.display = 'none';
+            } else renderDrilldownChart();
+
+            const ctx2 = document.getElementById('chartBrands').getContext('2d'); const bLabels = Object.keys(brandStats); const bData = bLabels.map(b => (brandStats[b].c / brandStats[b].t)*100);
+            if(chartBrandsInstance) chartBrandsInstance.destroy();
+            chartBrandsInstance = new Chart(ctx2, { type: 'bar', data: { labels: bLabels.map(l=>translateItem(l)), datasets: [{ label: '% Completion', data: bData, backgroundColor: getGradient(ctx2, '#22d3ee', '#0284c7'), borderRadius: 8, borderWidth:1, borderColor:'rgba(255,255,255,0.2)', barPercentage: 0.6 }] }, options: { scales: { y: { beginAtZero: true, max: 100, grid:{color:'rgba(255,255,255,0.05)'} }, x: { grid:{display:false} } }, plugins: { legend: { display: false } }, maintainAspectRatio: false } });
+
+            const ctx3 = document.getElementById('chartBottleneck').getContext('2d'); const dLabels = Object.keys(delayedStats); const dData = Object.values(delayedStats);
+            if(chartBottleneckInstance) chartBottleneckInstance.destroy();
+            chartBottleneckInstance = new Chart(ctx3, { type: 'bar', data: { labels: dLabels.map(l=>translateItem(l)), datasets: [{ label: 'Delayed', data: dData, backgroundColor: getGradient(ctx3, '#fb7185', '#be123c'), borderRadius: 8, borderWidth:1, borderColor:'rgba(255,255,255,0.2)', barPercentage: 0.6 }] }, options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid:{color:'rgba(255,255,255,0.05)'} }, x: { grid:{display:false} } }, plugins: { legend: { display: false } }, maintainAspectRatio: false } });
+
+            const ctx4 = document.getElementById('chartSupplier').getContext('2d'); const sLabels = Object.keys(supplierStats); const sData = sLabels.map(s => Math.round((supplierStats[s].c / supplierStats[s].t)*100));
+            if(chartSupplierInstance) chartSupplierInstance.destroy();
+            chartSupplierInstance = new Chart(ctx4, { type: 'doughnut', data: { labels: sLabels.map(l=>translateItem(l)), datasets: [{ data: sData, backgroundColor: [getGradient(ctx4, '#c084fc', '#7e22ce'), getGradient(ctx4, '#fbbf24', '#d97706'), getGradient(ctx4, '#34d399', '#059669'), getGradient(ctx4, '#60a5fa', '#2563eb')], borderWidth:2, borderColor: 'rgba(15, 23, 42, 0.8)', hoverOffset: 15 }] }, options: { plugins: { legend: { position: 'right', labels: { color: '#f8fafc' } } }, maintainAspectRatio: false, cutout: '50%' } });
+        }
+
+        window.applyFilters = (tableId, inputClass) => {
+            const tr = document.getElementById(tableId).getElementsByTagName("tr"); const inputs = document.querySelectorAll(`.${inputClass}`);
+            for (let i = 1; i < tr.length; i++) {
+                let rowVis = true;
+                for(let j=0; j<inputs.length; j++) if(inputs[j].value && tr[i].getElementsByTagName("td")[j].textContent.toLowerCase().indexOf(inputs[j].value.toLowerCase()) === -1) { rowVis = false; break; }
+                tr[i].style.display = rowVis ? "" : "none";
+            }
+        };
+
+        applyLanguage();
+    </script>
+</body>
+</html>

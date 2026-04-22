@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dara Health Co</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="theme-default mode-dark">
+
+  <canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+  <div class="bg" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+  </div>
+
+  <div class="background-logos" id="bgLogos" aria-hidden="true">
+    <img src="Assets/dara.png"    class="bg-logo logo1" alt="" />
+    <img src="Assets/salutem.png" class="bg-logo logo2" alt="" />
+    <img src="Assets/joswe.png"   class="bg-logo logo3" alt="" />
+  </div>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <header class="topbar">
+    <div class="brand" aria-label="Dara Health Co">
+      <div class="brand-logo-wrap">
+        <span class="brand-dot"></span>
+        <span class="brand-pulse"></span>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title" data-i18n="appName">Dara Health Co</div>
+        <div class="brand-datetime" aria-label="Date and time">
+          <span id="time-jo" class="time-badge">🇯🇴 --</span>
+          <span id="time-iq" class="time-badge">🇮🇶 --</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="floatingMenuWrap" class="floating-menu-wrap" style="display: none;">
+      <button id="floatingMenuToggle" class="floating-back" type="button" aria-label="Reports Menu">
+        <span class="back-icon">📑</span>
+        <span data-i18n="reportsMenu">قائمة التقارير</span>
+        <span class="menu-arrow">▼</span>
+      </button>
+      
+      <div class="floating-dropdown">
+        <div class="floating-dropdown-header" data-i18n="fastNav">التنقل السريع بين التقارير</div>
+        <div id="floatingDropdownList" class="floating-list">
+          </div>
+        <div class="divider"></div>
+        <button id="floatBackMain" class="floating-item item-secondary">
+          <span class="item-icon">🏠</span> <span data-i18n="backToReports">التقارير الرئيسية</span>
+        </button>
+        <button id="floatLogout" class="floating-item item-danger">
+          <span class="item-icon">🚪</span> <span data-i18n="logout">تسجيل خروج</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div id="userWelcome" class="user-welcome" hidden>
+        <span class="user-welcome-icon" aria-hidden="true">👋</span>
+        <span id="userWelcomeText" class="user-welcome-text"></span>
+      </div>
+
+      <div class="lang-menu" aria-label="Language menu">
+        <button
+          id="langToggle"
+          class="icon-btn has-tooltip"
+          type="button"
+          aria-label="Language"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          data-tooltip="اللغة"
+        >🌐</button>
+
+        <div id="langDropdown" class="lang-dropdown" role="menu" aria-label="Choose language">
+          <button type="button" class="lang-item" data-lang="ar" role="menuitemradio" aria-checked="true">
+            <span class="lang-flag">🇸🇦</span>
+            <span class="lang-text">عربي</span>
+            <span class="lang-check" aria-hidden="true">✓</span>
+          </button>
+          <button type="button" class="lang-item" data-lang="en" role="menuitemradio" aria-checked="false">
+            <span class="lang-flag">🇺🇸</span>
+            <span class="lang-text">English</span>
+            <span class="lang-check" aria-hidden="true">✓</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="toggleThemeBtn" type="button" aria-label="Toggle theme">🌓</button>
+    </div>
+  </header>
+
+  <div id="topProgressBar" class="top-progress-bar" aria-hidden="true">
+    <div class="top-progress-fill"></div>
+  </div>
+
+  <main class="app">
+
+    <section class="screen is-active" id="deptBox" data-screen="dept" aria-labelledby="deptTitle">
+      <div class="card card-center card-dept">
+
+        <span class="corner corner-tl" aria-hidden="true"></span>
+        <span class="corner corner-tr" aria-hidden="true"></span>
+        <span class="corner corner-bl" aria-hidden="true"></span>
+        <span class="corner corner-br" aria-hidden="true"></span>
+
+        <div class="card-icon-header" aria-hidden="true">
+          <div class="icon-ring">
+            <span class="icon-ring-symbol">🏥</span>
+          </div>
+        </div>
+
+        <h2 id="deptTitle" class="title animate-stagger" data-i18n="selectDept">اختر القسم</h2>
+        <p class="subtitle animate-stagger" data-i18n="selectDeptDesc">حدد القسم للوصول للتقارير الخاصة به</p>
+
+        <div class="btn-row animate-stagger">
+          <button class="btn btn-primary dept-btn ripple" type="button" data-dept="sales">
+            <span class="btn-ic">📊</span>
+            <span data-i18n="salesDept">قسم المبيعات</span>
+            <span class="btn-shine" aria-hidden="true"></span>
+          </button>
+
+          <button class="btn btn-secondary dept-btn ripple" type="button" data-dept="finance">
+            <span class="btn-ic">💰</span>
+            <span data-i18n="financeDept">قسم المالية</span>
+            <span class="btn-shine" aria-hidden="true"></span>
+          </button>
+
+          <button class="btn btn-busdev dept-btn ripple" type="button" data-dept="busdev" style="grid-column: 1 / -1;">
+            <span class="btn-ic">🚀</span>
+            <span data-i18n="busdevDept">قسم البحث والتطوير</span>
+            <span class="btn-shine" aria-hidden="true"></span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="screen" id="loginBox" data-screen="login" aria-labelledby="loginTitle">
+      <div class="card card-center">
+
+        <span class="corner corner-tl" aria-hidden="true"></span>
+        <span class="corner corner-tr" aria-hidden="true"></span>
+        <span class="corner corner-bl" aria-hidden="true"></span>
+        <span class="corner corner-br" aria-hidden="true"></span>
+
+        <div class="dept-badge" id="deptBanner"></div>
+
+        <h2 id="loginTitle" class="title animate-stagger" data-i18n="loginTitle">تسجيل الدخول</h2>
+        <p class="subtitle animate-stagger" data-i18n="loginDesc">أدخل بياناتك للوصول إلى التقارير</p>
+
+        <form id="loginForm" class="form animate-stagger" autocomplete="on">
+
+          <div class="field">
+            <label for="username" class="label" data-i18n="usernameLabel">اسم المستخدم</label>
+            <div class="input-wrap">
+              <span class="input-icon" aria-hidden="true">👤</span>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                data-i18n-placeholder="usernamePh"
+                placeholder="مثال: sales.user1"
+                autocomplete="username"
+                required
+              />
+              <span class="input-focus-bar" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password" class="label" data-i18n="passwordLabel">كلمة المرور</label>
+            <div class="input-wrap input-with-action">
+              <span class="input-icon" aria-hidden="true">🔑</span>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                data-i18n-placeholder="passwordPh"
+                placeholder="كلمة المرور"
+                autocomplete="current-password"
+                required
+              />
+              <button class="mini-btn" id="togglePassBtn" type="button" aria-label="Show/Hide password">👁️</button>
+              <span class="input-focus-bar" aria-hidden="true"></span>
+            </div>
+            <p class="micro" id="capsHint" hidden data-i18n="capsHint">تنبيه: Caps Lock مفعّل</p>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="rememberUsername" />
+            <span class="check-box" aria-hidden="true"></span>
+            <span data-i18n="rememberUsername">تذكّر اسم المستخدم</span>
+          </label>
+
+          <button class="btn btn-primary btn-block ripple" id="loginBtn" type="submit">
+            <span id="loginBtnText" data-i18n="loginBtn">دخول</span>
+            <span id="loginBtnSpinner" class="btn-spinner" hidden aria-hidden="true"></span>
+            <span class="btn-shine" aria-hidden="true"></span>
+          </button>
+
+          <p id="error" class="error" role="alert" aria-live="polite"></p>
+
+          <div class="divider"><span class="divider-text" data-i18n="orText">أو</span></div>
+
+          <button class="btn btn-ghost btn-block ripple" id="backDeptBtn" type="button">
+            🏠 <span data-i18n="changeDept">تغيير القسم</span>
+          </button>
+
+        </form>
+      </div>
+    </section>
+
+    <section class="screen" id="menuBox" data-screen="menu" aria-labelledby="menuTitle">
+      <div class="card card-wide card-center card-menu">
+
+        <div class="menu-head">
+          <div class="menu-head-text">
+            <h2 id="menuTitle" class="title">—</h2>
+            <p class="subtitle" id="menuSubtitle" data-i18n="chooseCompany">اختر الشركة لفتح التقرير</p>
+          </div>
+
+          <button class="btn btn-ghost ripple" id="changeDeptFromMenu" type="button">
+            🏠 <span data-i18n="changeDept">تغيير القسم</span>
+          </button>
+        </div>
+
+        <div class="report-search-wrap" id="reportSearchWrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            id="reportSearch"
+            class="report-search"
+            data-i18n-placeholder="searchPh"
+            placeholder="بحث…"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="report-grid-wrapper" aria-label="Reports list">
+          <div class="report-grid" id="reportsGrid"></div>
+        </div>
+
+        <div class="menu-footer">
+          <button class="btn btn-danger btn-block ripple" id="logoutBtn" type="button" data-i18n="logout">تسجيل خروج</button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="screen screen-full" id="reportContainer" data-screen="report" aria-label="Report viewer">
+      <div class="report-topbar">
+        <div class="report-title-bar" id="reportTitleBar">
+          <span class="report-title-dot" aria-hidden="true"></span>
+          <span id="reportTitleLabel" class="report-title-label">—</span>
+        </div>
+        <div class="report-actions">
+          <button class="icon-btn has-tooltip" id="reloadReportBtn" type="button" data-tooltip="إعادة تحميل" aria-label="Reload report">🔄</button>
+          <button class="icon-btn has-tooltip" id="openNewTabBtn"  type="button" data-tooltip="فتح في تبويب" aria-label="Open in new tab">🔗</button>
+        </div>
+      </div>
+
+      <div class="report-shell">
+        <div class="report-loading" id="reportLoading" aria-live="polite">
+          <div class="loading-ring" aria-hidden="true">
+            <div class="loading-ring-inner"></div>
+          </div>
+          <div class="loading-text-wrap">
+            <div class="loading-title" data-i18n="loadingTitle">جارِ تحميل التقرير…</div>
+            <div class="loading-sub"   data-i18n="loadingSub">قد يستغرق ثوانٍ حسب الاتصال</div>
+            <div class="loading-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+
+        <iframe
+          id="reportFrame"
+          title="Power BI Report"
+          loading="eager"
+          referrerpolicy="no-referrer"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+
+  </main><script type="module" src="script.js"></script>
+</body>
+</html>
